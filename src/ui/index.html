@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light"><title>生活手记 · Companion Life</title>
+  <link rel="stylesheet" href="/life/style.css"><script type="module" src="/life/app.js"></script>
+</head>
+<body>
+  <div class="workspace">
+    <aside class="sidebar">
+      <a class="brand" href="/life" aria-label="生活手记首页"><span class="whale-mark" aria-hidden="true">🐳</span><span><strong id="brand-name">生活手记</strong><small>COMPANION LIFE</small></span></a>
+      <div class="sidebar-caption">把日子慢慢过，把故事慢慢写。</div>
+      <nav aria-label="生活面板导航" id="navigation">
+        <button class="nav-item selected" data-nav="today"><span data-icon="home"></span><span>今日手记</span><i>01</i></button>
+        <button class="nav-item" data-nav="timeline"><span data-icon="clock"></span><span>生活时间线</span><i>02</i></button>
+        <button class="nav-item" data-nav="stories"><span data-icon="book"></span><span>持续事项</span><i>03</i></button>
+        <button class="nav-item" data-nav="plans"><span data-icon="calendar"></span><span>未来约定</span><i>04</i></button>
+        <button class="nav-item" data-nav="history"><span data-icon="archive"></span><span>记录修订</span><i>05</i></button>
+        <button class="nav-item" data-nav="settings"><span data-icon="settings"></span><span>生活方向</span><i>06</i></button>
+      </nav>
+      <div class="sidebar-note"><span class="note-star">✧</span><p>生活里那些小小的事，<br>也值得被好好记住。</p><span class="note-sign">— 写给平凡的一天</span></div>
+      <div class="sidebar-bottom"><span class="connection-dot"></span><span id="connection-text">等待连接本地手记</span><button id="logout" title="退出面板" aria-label="退出面板"><span data-icon="logout"></span></button></div>
+    </aside>
+    <div class="main-shell">
+      <header class="hero">
+        <div class="hero-top"><span class="eyebrow">A LITTLE LIFE, WELL REMEMBERED</span><div class="hero-actions"><select id="binding" aria-label="选择生活实例" hidden></select><button class="glass-button" id="refresh"><span data-icon="refresh"></span>刷新</button></div></div>
+        <h1>平凡的日子，<br>也会闪闪发光。</h1>
+        <p>和你一起，慢慢续写生活 <span>♡</span></p>
+        <div class="hero-sticker"><span>今日小笺</span><p>不必每一天都特别。<br>有被记住的小事，<br>就已经很好了。</p><b>✦</b></div>
+      </header>
+      <main id="main-content" aria-busy="true">
+        <div class="page-intro"><div><span class="small-label">LIFE JOURNAL</span><h2 id="page-heading">今天，也好好生活</h2></div><div class="sync"><span class="connection-dot"></span><span id="synced">正在连接…</span></div></div>
+        <div class="notice" id="notice" role="status" hidden></div>
+        <section class="summary-grid" aria-label="生活状态概览">
+          <article class="paper summary profile-card"><div class="card-kicker"><span data-icon="sun"></span>当前角色</div><div class="profile-body"><div class="avatar whale-avatar"><img src="/life/assets/jingjing-avatar.png" alt="鲸鲸的蓝发鲸鱼女仆形象"></div><div><h3 id="profile-name">我的伙伴</h3><span class="soft-badge green" id="role-badge">等待读取</span></div></div><p class="muted" id="profile-subtitle">记录日常，让故事慢慢延续。</p></article>
+          <article class="paper summary activity-card"><div class="card-kicker"><span data-icon="leaf"></span><span id="activity-kicker">当前活动</span></div><div class="activity-body"><div class="round-scene"><img src="/life/assets/jingjing-study.png" alt="鲸鲸整理笔记的装饰插画"></div><div><h3 id="current-activity">翻开今天的手记…</h3><p class="muted" id="current-detail">计划与经历，会认真分开记录。</p></div></div><button class="text-button" id="view-current">查看记录 <span>↗</span></button></article>
+          <article class="paper summary date-card"><div class="card-kicker"><span data-icon="calendar"></span>翻到这一天</div><div class="date-controls"><button class="icon-button" id="prev-day" aria-label="前一天">‹</button><label class="date-label"><span id="date-display">选择日期</span><input type="date" id="date-input" aria-label="查看日期"></label><button class="icon-button" id="next-day" aria-label="后一天">›</button></div><p class="muted" id="weekday">—</p><button class="pill-button" id="back-today">回到今天</button></article>
+        </section>
+        <div class="dashboard-grid">
+          <section class="paper panel timeline-panel" data-section="timeline"><div class="section-heading"><div><h3><span data-icon="sun"></span>这一天的时间线</h3><p>计划有变也没关系，发生过的事会留下来。</p></div><select id="timeline-filter" aria-label="筛选时间线"><option value="all">全部记录</option><option value="confirmed">已确认经历</option><option value="planned">计划与约定</option></select></div><div class="legend"><span class="legend-green">已确认</span><span class="legend-blue">当前计划</span><span class="legend-amber">待确认 / 计划</span></div><div id="timeline" class="timeline-list"><div class="empty-state">正在打开手记…</div></div></section>
+          <div class="right-column">
+            <section class="paper panel stories-panel" data-section="stories"><div class="section-heading"><div><h3><span data-icon="leaf"></span>持续中的事情</h3><p>那些正在进行的、值得继续的小事。</p></div><span class="count-badge" id="story-count">0</span></div><div id="stories"></div><div class="story-footnote">显示当前记录；时间经过不会自动增加进度。</div></section>
+            <section class="paper panel plans-panel" data-section="plans"><div class="section-heading"><div><h3><span data-icon="star"></span>未来约定</h3><p>一起把想做的事，留进日子里。</p></div><button class="small-button" id="qq-help"><span data-icon="message"></span>在 QQ 约时间</button></div><label class="ended-toggle"><input type="checkbox" id="show-ended">也看已完成、已取消的约定</label><div id="plans"></div></section>
+            <section class="paper quiet-note" data-section="today-note"><div><span class="small-label">A NOTE TO SELF</span><p>一点点记录，<br>就会变成很长的陪伴。</p><small>— 今天的生活手记</small></div><span aria-hidden="true">✧</span></section>
+          </div>
+          <section class="paper panel history-panel" data-section="history"><div class="section-heading"><div><h3><span data-icon="archive"></span>记录与修订</h3><p>改过的地方，也会被认真留存。</p></div><span id="history-count" class="count-badge">0</span></div><div id="history"></div></section>
+          <section class="paper panel settings-panel" data-section="settings"><div class="section-heading"><div><h3><span data-icon="settings"></span>生活方向与设定</h3><p>原有人设保持优先，日常活动由你选择。</p></div></div><div id="settings"></div></section>
+        </div>
+        <section class="paper inspector" id="inspector" hidden tabindex="-1"><div class="section-heading"><div><h3><span data-icon="file"></span>记录详情</h3><p id="inspector-heading"></p></div><button class="icon-button" id="close-inspector" aria-label="收起记录详情">×</button></div><div id="inspector-body"></div><div class="inspector-actions"><button class="small-button" id="restore-record" hidden>恢复撤回的记录</button><button class="small-button" id="edit-record"><span data-icon="edit"></span>纠正细节</button><button class="small-button danger" id="retract-record">撤回这条记录</button></div></section>
+        <section class="footer-grid"><div class="stats-strip" id="stats"></div><p class="footer-copy">今天的小事，也在好好发光。<span>Companion Life · 本地生活手记</span></p></section>
+      </main>
+    </div>
+  </div>
+  <dialog id="login-dialog"><form id="login-form" class="dialog-content"><div class="dialog-art" aria-hidden="true"></div><span class="small-label">WELCOME HOME</span><h2>翻开你的生活手记</h2><p class="muted">使用本地服务的管理令牌连接。令牌仅保存在本次浏览会话。</p><label>管理令牌<input type="password" id="token-input" autocomplete="off" required placeholder="粘贴本地管理令牌"></label><p class="form-error" id="login-error" role="alert"></p><button class="primary-button" type="submit">打开手记 <span>→</span></button></form></dialog>
+  <dialog id="edit-dialog"><form id="edit-form" class="dialog-content"><button type="button" class="dialog-close" data-close="edit-dialog" aria-label="关闭编辑">×</button><span class="small-label">A CAREFUL REVISION</span><h2 id="edit-title">纠正记录细节</h2><p class="muted" id="edit-description">只修改选中的这条记录，原内容会保留在修订历史里。</p><div id="edit-fields"></div><label>修订原因<input id="edit-reason" required maxlength="180" placeholder="例如：书名记错了，补上正确的名字"></label><p class="form-error" id="edit-error" role="alert"></p><div class="dialog-actions"><button type="button" class="pill-button" data-close="edit-dialog">先不改</button><button type="submit" class="primary-button" id="save-edit">保存修订</button></div></form></dialog>
+  <dialog id="help-dialog"><div class="dialog-content"><button class="dialog-close" data-close="help-dialog" aria-label="关闭帮助">×</button><span class="small-label">TAKE YOUR JOURNAL WITH YOU</span><h2>手机上，也能翻手记</h2><p class="muted">在 QQ 私聊发送这些指令，直接读取本地记录，不消耗模型请求。</p><div class="command-list"><button data-copy="/生活"><code>/生活</code><span>看看今天的安排 ↗</span></button><button data-copy="/生活 明天"><code>/生活 明天</code><span>翻到明天的计划 ↗</span></button><button data-copy="/约定"><code>/约定</code><span>查看我们约好的事 ↗</span></button></div><p class="muted">想改期或取消，直接用平常聊天的方式告诉她就好。</p><p id="copy-status" role="status"></p></div></dialog>
+  <div class="toast" id="toast" role="status" hidden></div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+config.local.json
+data/
+artifacts/
+node_modules/
+*.tgz
+*.log
+*.bak
+.env
+.env.*
+__pycache__/
+*.pyc
+.DS_Store
+coverage/

@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "host": "127.0.0.1",
+  "port": 5421,
+  "dataDir": "./data",
+  "adminToken": "GENERATE_WITH_NPM_RUN_INIT",
+  "bindings": [{
+    "id": "demo",
+    "token": "GENERATE_WITH_NPM_RUN_INIT",
+    "kind": "private",
+    "role": "companion",
+    "persona": "一个温和俏皮、喜欢阅读的虚拟伙伴。",
+    "life": {
+      "enabled": true,
+      "timeZone": "Asia/Shanghai",
+      "detailGate": { "enabled": true },
+      "stories": { "enabled": true },
+      "weeklySummary": { "enabled": true },
+      "futurePlans": { "enabled": true },
+      "calendar": { "enabled": true },
+      "proactive": { "enabled": false, "maxPerDay": 2, "minGapMinutes": 240, "idleMinutes": 20, "transitionGraceMinutes": 15, "quietStart": "22:00", "quietEnd": "08:00" }
+    }
+  }]
+}
