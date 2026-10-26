@@ -27,6 +27,7 @@ function historySnapshot(value) {
   if (typeof value === 'string') return { 内容: value };
   const result = {};
   if (value.activity || value.title) result.活动 = value.activity || value.title;
+  if(value.note)result.说明=value.note;
   if (value.date) result.日期 = value.date;
   if (value.start || value.time) result.时间 = value.start ? `${value.start}–${value.end}` : value.time;
   if (value.durationMinutes) result.时长 = value.durationMinutes + '分钟';
@@ -71,7 +72,7 @@ export function buildLifeView({ data, config, role, now, key, date = now.date, w
     .sort((a,b) => (a.status === 'planned' ? a.overdue ? 1 : 0 : 2) - (b.status === 'planned' ? b.overdue ? 1 : 0 : 2) || a.date.localeCompare(b.date) || a.time.localeCompare(b.time)).slice(0,40);
   const revisions = (data.revisions || []).filter(r => (r.role === role || r.type === 'life_story' && data.stories?.[r.id]?.role === role && data.stories[r.id].key === lifeStoryKey(config,key)) && (!r.date || r.date === date) && r.type !== 'future_plan').slice(-24)
     .map(r => ({ type: r.type || 'life_event', at: r.at,
-      title: (r.type === 'life_mode_change' ? '生活方向调整' : null) || r.previous?.activity || stored?.slots.find(s=>s.id===r.slotId)?.activity || data.stories?.[r.id]?.title || '生活记录',
+      title: (r.type === 'life_mode_change' ? '生活方向调整' : r.type === 'life_milestone' ? '特别纪念 · '+(r.proposed?.title||r.previous?.title||'') : null) || r.previous?.activity || stored?.slots.find(s=>s.id===r.slotId)?.activity || data.stories?.[r.id]?.title || '生活记录',
       reason: r.reason || ({rejected:'冲突候选已拒绝',plan_changed:'计划已调整'})[r.resolution] || '记录修订',
       previous: historySnapshot(r.previous || r.previousProgress), next: historySnapshot(r.proposed) }));
   const calendarChanges = (data.calendarChanges || []).filter(r => r.role === role && r.key === key && (r.next?.date === date || r.previous?.date === date)).slice(-16)

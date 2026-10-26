@@ -30,16 +30,17 @@ export function createHttpServer(config, runtime) {
         }
         const id = url.searchParams.get('binding') || config.bindings[0].id, entry = runtime.bindings.get(id);
         if (!entry) throw new RuntimeError(404, 'Unknown life binding');
+        if(req.method==='GET'&&url.pathname==='/life/api/calendar'){json(200,{ok:true,calendar:entry.life.calendar(entry.b.role,url.searchParams.get('month')||undefined)});return;}
         if (req.method === 'GET' && url.pathname === '/life/api/view') {
           json(200, { ok: true, view: entry.life.view(entry.b.role, { key: id, date: url.searchParams.get('date') || undefined, name: entry.b.role, admin: true }) }); return;
         }
-        if (req.method === 'POST' && ['/life/api/records/revise','/life/api/mode'].includes(url.pathname)) {
+        if (req.method === 'POST' && ['/life/api/records/revise','/life/api/mode','/life/api/milestones'].includes(url.pathname)) {
           if (runtime.busy(id)) throw new RuntimeError(409, 'Conversation is updating; retry after the turn ends');
           const chunks = []; let size = 0;
           for await (const chunk of req) { size += chunk.length; if (size > 32768) throw new RuntimeError(413, 'Revision too large'); chunks.push(chunk); }
           let body; try { body = JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { throw new RuntimeError(400, 'Invalid revision JSON'); }
           if (!body || typeof body !== 'object' || Array.isArray(body)) throw new RuntimeError(400, 'Revision object required');
-          json(200, url.pathname === '/life/api/mode' ? entry.life.setMode(entry.b.role, body) : entry.life.revise(entry.b.role, body)); return;
+          json(200, url.pathname === '/life/api/milestones' ? entry.life.milestone(entry.b.role,body) : url.pathname === '/life/api/mode' ? entry.life.setMode(entry.b.role, body) : entry.life.revise(entry.b.role, body)); return;
         }
         throw new RuntimeError(404, 'Unknown panel route');
       }

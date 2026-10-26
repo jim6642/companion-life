@@ -86,3 +86,5 @@ npm run release
 本项目采用 [MIT](LICENSE)。创作者为 [jim6642](https://github.com/jim6642)，本次发布仅包含其作者署名。代码来源与兼容接口边界见 [PROVENANCE.md](PROVENANCE.md)。贡献请看 [CONTRIBUTING.md](CONTRIBUTING.md)，安全问题请看 [SECURITY.md](SECURITY.md)。
 
 生活方向已支持默认继承、自定义素材和跨日生效，详见 [生活方向说明](docs/life-modes.md)。
+
+生活面板以「当天记录」为首页，「生活日历」用于按月选日期、查看特别纪念，见 [日历面板说明](docs/calendar-panel.md)。面板只是管理界面，关闭网页不影响后端的生活上下文、记录与检索；仍需保持宿主聊天服务及本地运行时运行。

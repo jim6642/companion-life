@@ -200,3 +200,19 @@ test('life mode changes require admin and do not rewrite existing day or another
  assert.deepEqual((await view()).timeline,before.timeline);assert.equal((await view()).lifeMode.selected.id,'researcher');
  r=await fetch(baseUrl+'/life/api/mode?binding=demo',{method:'POST',headers,body:JSON.stringify(body)});assert.equal(r.status,409);
 });
+
+
+test('headless: chat, delivered memory, later recall and reload work without any panel requests', async t => {
+  const {client,runtime,config,server}=await fixture(t);const panelRequests=[];
+  server.on('request',req=>{if(req.url.startsWith('/life'))panelRequests.push(req.url);});
+  let generates=0,sends=0;
+  const result=await runChatTurn({client,userText:'早饭吃了什么',generate:async({context,propose})=>{
+    generates++;assert.match(context,/上高数课/);await propose({lifeEvents:[event()]});return event().evidence;
+  },send:async messages=>{sends++;return {status:'success',deliveredMessages:messages};}});
+  assert.equal(result.delivered,true);assert.equal(result.memory.life.ok,true);
+  assert.match((await client.call('/v1/context',{query:'早饭'})).context,/小笼包/);
+  const {createVirtualLife}=await import('../src/core/virtual-life.js');
+  const reloaded=createVirtualLife({file:path.join(config.dataDir,'demo','life.json'),config:lifeConfig(),clock:()=>new Date('2026-01-10T09:30:00+08:00')});
+  assert.match(reloaded.prompt('companion','早饭'),/小笼包/);
+  assert.equal(runtime.stats().openTurns,0);assert.equal(generates,1);assert.equal(sends,1);assert.deepEqual(panelRequests,[]);
+});

@@ -49,6 +49,7 @@ async function load(date){
     const result=await api('view'+(query?'?date='+encodeURIComponent(query):''));
     state.view=result.view;state.date=result.view.date;
     if(state.selected){const updated=result.view.timeline.find(r=>r.id===state.selected.id);if(!updated)closeInspector();else state.selected=updated;}
+    await loadCalendar(state.nav==='calendar'&&state.calendar?.month?state.calendar.month:state.date.slice(0,7));
     render();if(state.selected)selectRecord(state.selected,false);$('connection-text').textContent='本地手记已连接';
   }catch(e){$('connection-text').textContent='连接暂时中断';toast(e.message);throw e;}
   finally{state.loading=false;$('main-content').setAttribute('aria-busy','false');$('refresh').disabled=false;for(const id of ['prev-day','next-day','back-today','date-input'])$(id).disabled=!state.view;}
@@ -134,11 +135,42 @@ function renderSettings(){
   form.addEventListener('submit',async e=>{e.preventDefault();submit.disabled=true;try{const saved=await api('mode',{id:select.value,notes:notes.value,expectedVersion:mode.version});state.modeEditing=false;await load();toast('生活方向已保存，从 '+saved.effectiveDate+' 的新日程生效。');}catch(error){result.textContent=error.message;submit.disabled=false;}});
 }
 function switchNav(name,scroll=true){
-  state.nav=name;const titles={today:'今天，也好好生活',timeline:'把一天，慢慢翻开',stories:'故事，还在继续',plans:'把期待，留进日子里',history:'每一次修改，都有来处',settings:'此刻的她，这样生活'};
-  $('page-heading').textContent=titles[name];$('main-content').classList.toggle('view-single',name!=='today');
-  for(const button of document.querySelectorAll('[data-nav]')){button.classList.toggle('selected',button.dataset.nav===name);button.setAttribute('aria-current',button.dataset.nav===name?'page':'false');button.title=button.textContent.trim();}
-  for(const section of document.querySelectorAll('[data-section]')){section.hidden=name==='today'?['history','settings'].includes(section.dataset.section):section.dataset.section!==name;section.classList.toggle('section-visible',section.dataset.section===name);}
-  if(scroll)window.scrollTo({top:document.querySelector('.hero').offsetHeight+12,behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth'});
+ state.nav=name;const detail=name==='today';
+ if(detail&&state.calendar?.month!==state.date.slice(0,7))loadCalendar(state.date.slice(0,7)).catch(e=>toast(e.message));
+ $('stats').hidden=!detail;
+ $('page-heading').textContent=({calendar:'日子有迹，特别的事有名字',today:state.date+' · 当天记录',settings:'选择日常，保留原来的她'})[name];
+ $('main-content').classList.toggle('view-single',name==='settings');
+ $('calendar-panel').hidden=name!=='calendar';$('day-milestones').hidden=!detail;
+ document.querySelector('.summary-grid').hidden=!detail;document.querySelector('.dashboard-grid').hidden=name==='calendar';
+ $('inspector').hidden=!detail||!state.selected;
+ for(const button of document.querySelectorAll('[data-nav]')){button.classList.toggle('selected',button.dataset.nav===name);button.setAttribute('aria-current',button.dataset.nav===name?'page':'false');}
+ for(const section of document.querySelectorAll('[data-section]')){section.hidden=detail?section.dataset.section==='settings':section.dataset.section!==name;section.classList.toggle('section-visible',section.dataset.section===name);}
+ if(scroll)window.scrollTo({top:document.querySelector('.hero').offsetHeight+12,behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth'});
+}
+async function loadCalendar(month){
+ const result=await api('calendar'+(month?'?month='+encodeURIComponent(month):''));state.calendar=result.calendar;renderCalendar();
+}
+function renderCalendar(){
+ const c=state.calendar;if(!c)return;$('month-input').value=c.month;$('month-heading').textContent=c.month.replace('-',' 年 ')+' 月';
+ const grid=$('calendar-grid');grid.replaceChildren();
+ const offset=(new Date(c.month+'-01T12:00:00Z').getUTCDay()+6)%7;
+ for(let i=0;i<offset;i++)grid.append(node('div','calendar-blank'));
+ for(const d of c.days){const b=node('button','calendar-day'+(d.date===c.today?' is-today':'')+(d.date===state.date?' is-selected':''));b.type='button';b.setAttribute('aria-label',d.date+(d.milestones.length?' '+d.milestones.map(m=>m.title).join('，'):''));
+ const top=node('div','day-top');top.append(node('strong','',Number(d.date.slice(-2))));if(d.date===c.today)top.append(node('small','','今天'));b.append(top);
+ for(const m of d.milestones.slice(0,2))b.append(node('span','calendar-milestone','✦ '+m.title));
+ if(d.milestones.length>2)b.append(node('small','','另有 '+(d.milestones.length-2)+' 件纪念'));
+ if(d.recorded)b.append(node('small','day-count',d.confirmed?'● '+d.confirmed+' 条自述':'● 已有日程'));
+ b.addEventListener('click',async()=>{state.followToday=false;try{await load(d.date);switchNav('today');}catch{}});grid.append(b);}
+ const box=$('milestones');box.replaceChildren();const day=c.days.find(d=>d.date===state.date);
+ if(!day?.milestones.length)box.append(node('p','muted','这一天还没有特别纪念，平常的一天也很好。'));
+ for(const m of day?.milestones||[]){const row=node('article','milestone-item'),content=node('div');content.append(node('h4','',m.title),node('small','muted',m.sourceLabel));if(m.note)content.append(node('p','',m.note));row.append(content);if(m.editable){const edit=node('button','small-button','编辑');edit.onclick=()=>openMilestone(m);row.append(edit);}box.append(row);}
+ $('add-milestone').disabled=!state.view?.writable;
+}
+function openMilestone(m){state.milestone=m||null;$('milestone-date').value=m?.date||state.date;$('milestone-title').value=m?.title||'';$('milestone-note').value=m?.note||'';$('milestone-error').textContent='';$('delete-milestone').hidden=!m;$('milestone-dialog').showModal();}
+async function submitMilestone(action='save'){
+ const m=state.milestone;$('save-milestone').disabled=true;$('delete-milestone').disabled=true;
+ try{await api('milestones',{...(m?{id:m.id,version:m.version}:{}),date:$('milestone-date').value,title:$('milestone-title').value,note:$('milestone-note').value,action});$('milestone-dialog').close();await load();toast(action==='retract'?'纪念已撤回，原记录已留档。':'特别的日子，记下了。');}
+ catch(e){$('milestone-error').textContent=e.message;}finally{$('save-milestone').disabled=false;$('delete-milestone').disabled=false;}
 }
 function selectRecord(r,focus=true){
   state.selected=r;renderTimeline();$('inspector').hidden=false;$('inspector-heading').textContent=`${r.date} ${r.start}–${r.end} · ${r.activity}`;
@@ -157,6 +189,10 @@ function openEdit(action){
   $('save-edit').textContent=({correct:'保存修订',retract:'确认撤回',restore:'确认恢复'})[action];$('edit-dialog').showModal();
 }
 for(const button of document.querySelectorAll('[data-nav]'))button.addEventListener('click',()=>switchNav(button.dataset.nav));
+$('add-milestone').onclick=()=>openMilestone();
+$('milestone-form').onsubmit=e=>{e.preventDefault();submitMilestone();};$('delete-milestone').onclick=()=>submitMilestone('retract');
+for(const [id,n]of [['prev-month',-1],['next-month',1]])$(id).onclick=()=>{const d=new Date(state.calendar.month+'-01T12:00:00Z');d.setUTCMonth(d.getUTCMonth()+n);loadCalendar(d.toISOString().slice(0,7)).catch(e=>toast(e.message));};
+$('month-input').onchange=()=>loadCalendar($('month-input').value).catch(e=>toast(e.message));$('this-month').onclick=()=>loadCalendar(state.view.today.slice(0,7)).catch(e=>toast(e.message));
 $('timeline-filter').addEventListener('change',renderTimeline);$('show-ended').addEventListener('change',renderPlans);
 $('refresh').addEventListener('click',()=>load().catch(()=>{}));$('binding').addEventListener('change',()=>{state.binding=$('binding').value;closeInspector();load().catch(()=>{});});
 for(const [id,n]of [['prev-day',-1],['next-day',1]])$(id).addEventListener('click',()=>{state.followToday=false;const d=new Date(state.date+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);load(d.toISOString().slice(0,10)).catch(()=>{});});

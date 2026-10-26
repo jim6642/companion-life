@@ -1,3 +1,4 @@
+import { monthView, saveMilestone } from './virtual-life-month.js';
 import { modeForDate, modeSchedule, modeInstruction, saveMode } from './virtual-life-modes.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -248,7 +249,7 @@ export function createVirtualLife({ file, config = {}, clock = () => new Date(),
         || facts.reduce((n, e) => n + brief(e).length, 0) > (selection.allDay ? 1200 : 600));
       const indexLine = hiddenFacts && selection.index ? `已存细节索引：${selection.index.slice(0, 240)}（未附≠未记；需时用life_context的query补读，勿重编）。\n` : '';
       const emptyFacts = selection?.index ? '本轮话题未选中，见细节索引' : '暂无，计划不等于发生';
-      return modeInstruction(data.days[JSON.stringify([s.role,s.date])]?.lifeMode) + calendarLine + storiesLine + plansLine + weekLine + indexLine + `【虚拟生活实验】这是角色的虚拟生活设定，不是现实活动的证据；沿用角色卡，自然补充虚拟生活细节，不机械汇报行程。\n当前时间：${s.date} ${s.time} (${config.timeZone || 'Asia/Shanghai'})\n当前计划活动：${current ? `${current.id} ${current.activity}，预计${current.end}结束` : '自由安排/休息（未确认）'}\n今日粗略日程：${s.slots.map(e => `${e.id} ${e.start}-${e.end} ${e.activity}[${e.status}${e.pendingConfirmation ? '，已过时段但未确认发生' : ''}]`).join('；')}\n今日已确认的虚拟经历：${factsText || emptyFacts}\n相关历史：${within(history, 600) || '无'}\n规则：这是可自主补充的虚拟角色生活，不是现实履历。没有既有事实时，你可以自然决定正在做什么、为已过时段补充合理生活细节，并把本次选定的设定随回复保存；不需要用户或数据库先替你确认。不要回复没有确认记录所以不能说，更不要向用户念evening、slotId、实验或数据库术语；像平常聊天那样讲具体活动即可。用户追问虚拟日常时直接补足具体细节：问书名就选定书名，问发生什么就展开动作和感受，不用装忘记或泛泛打趣代替回答。默认沿用已经提到的活动，未定细节允许创作并建立为虚拟事实，不撤回成现实没做过；确实核实现实时才说明区别。真实书籍内容须准确，不编造原著引文。已经确定的细节必须一致；明确标作假设、玩笑和用户经历不登记。自然补充自己的确定细节时，在本轮用life_propose提交lifeEvents候选，宿主确认消息送达后保存（date,slotId,status,subject="character",basis="own_virtual_experience",certainty="settled"或"tentative",details简短键值（阅读建议book/note/feeling等稳定键名）,evidence本次回复连续原文；更改活动加activity/changeReason，可加end）。细节值必须逐字出现在evidence。只在确有新事实或计划变更时附；不确定用tentative，不冒充completed。记录与成功发送绑定，失败不重发消息。修改已确认事实须核对，不能静默覆盖。\n\n`;
+      return modeInstruction(data.days[JSON.stringify([s.role,s.date])]?.lifeMode) + calendarLine + storiesLine + plansLine + weekLine + indexLine + `【虚拟生活实验】这是角色的虚拟生活设定，不是现实活动的证据；沿用角色卡，自然补充虚拟生活细节，不机械汇报行程。\n当前时间：${s.date} ${s.time} (${config.timeZone || 'Asia/Shanghai'})\n当前计划活动：${current ? `${current.id} ${current.activity}，预计${current.end}结束` : '自由安排/休息（未确认）'}\n今日粗略日程：${s.slots.map(e => `${e.id} ${e.start}-${e.end} ${e.activity}[${e.status}${e.pendingConfirmation ? '，已过时段但未确认发生' : ''}]`).join('；')}\n今日已确认的虚拟经历：${factsText || emptyFacts}\n相关历史：${within(history, 600) || '无'}\n纪念标记：只有罕见、明确具有特殊意义且已发生的自身虚拟事件，才在lifeEvents.details额外使用milestone简短标题，标题须逐字出现于evidence；普通吃饭上课不标记。真实插件安装等能力变化须宿主确认，不得自行杜撰。\n规则：这是可自主补充的虚拟角色生活，不是现实履历。没有既有事实时，你可以自然决定正在做什么、为已过时段补充合理生活细节，并把本次选定的设定随回复保存；不需要用户或数据库先替你确认。不要回复没有确认记录所以不能说，更不要向用户念evening、slotId、实验或数据库术语；像平常聊天那样讲具体活动即可。用户追问虚拟日常时直接补足具体细节：问书名就选定书名，问发生什么就展开动作和感受，不用装忘记或泛泛打趣代替回答。默认沿用已经提到的活动，未定细节允许创作并建立为虚拟事实，不撤回成现实没做过；确实核实现实时才说明区别。真实书籍内容须准确，不编造原著引文。已经确定的细节必须一致；明确标作假设、玩笑和用户经历不登记。自然补充自己的确定细节时，在本轮用life_propose提交lifeEvents候选，宿主确认消息送达后保存（date,slotId,status,subject="character",basis="own_virtual_experience",certainty="settled"或"tentative",details简短键值（阅读建议book/note/feeling等稳定键名）,evidence本次回复连续原文；更改活动加activity/changeReason，可加end）。细节值必须逐字出现在evidence。只在确有新事实或计划变更时附；不确定用tentative，不冒充completed。记录与成功发送绑定，失败不重发消息。修改已确认事实须核对，不能静默覆盖。\n\n`;
     } catch (e) { onError(`生活上下文不可用：${e.message}`); return ''; }
   }
   function checkStories(role, changes, sentText, key) {
@@ -266,6 +267,12 @@ export function createVirtualLife({ file, config = {}, clock = () => new Date(),
   function view(role, options = {}) {
     return buildLifeView({ data, config, role, now: now(), key: options.key, date: options.date, writable, template: DEFAULT_SCHEDULE, name: options.name, admin: options.admin === true });
   }
+  function calendar(role, month) { return monthView(data,role,month,now()); }
+  function milestone(role, body) {
+    if(!writable)throw Object.assign(Error('生活记录暂停写入'),{status:503});
+    const before=structuredClone(data);
+    try{const result=saveMilestone(data,role,body,now());save();return result;}catch(e){data=before;throw e;}
+  }
   function setMode(role, body) {
     if (!writable) throw Object.assign(Error('生活记录暂停写入'), {status:503});
     const before=structuredClone(data);
@@ -278,5 +285,5 @@ export function createVirtualLife({ file, config = {}, clock = () => new Date(),
     try { const result = reviseLifeRecord({ data, role, body, now: now() }); save(); return result; }
     catch (e) { data = before; throw e; }
   }
-  return { enabled, snapshot, prompt, prepare, check, record, checkPlans, recordPlans, checkStories, recordStories, view, revise, setMode };
+  return { enabled, snapshot, prompt, prepare, check, record, checkPlans, recordPlans, checkStories, recordStories, view, revise, setMode, calendar, milestone };
 }
