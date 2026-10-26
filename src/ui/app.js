@@ -56,8 +56,7 @@ async function load(date){
 }
 function render(){
   const v=state.view;
-  document.title=v.profile.name+'的生活手记';$('brand-name').textContent=v.profile.name+'的手记';$('profile-name').textContent=v.profile.name;
-  $('role-badge').textContent=v.profile.role;$('profile-subtitle').textContent=v.profile.subtitle;
+  document.title='生活手记 · Companion Life';$('brand-name').textContent='生活手记';
   $('date-display').textContent=dateText(v.date);$('date-input').value=v.date;
   $('weekday').textContent=new Intl.DateTimeFormat('zh-CN',{weekday:'long',timeZone:'UTC'}).format(new Date(v.date+'T12:00:00Z'));
   $('synced').textContent='同步于 '+new Intl.DateTimeFormat('zh-CN',{timeZone:v.timeZone,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(v.serverAt));

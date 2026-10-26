@@ -22,3 +22,5 @@
 .history-panel:not([hidden]){display:block}.calendar-milestone{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}@media(max-width:720px){#calendar-panel>.section-heading{flex-direction:column;align-items:stretch;gap:14px}.month-controls{justify-content:space-between}.calendar-day{min-height:82px}.day-count{line-height:1.3}.calendar-milestone{font-size:10px}}
 
 .whale-mark{display:block;width:43px;height:43px;flex:0 0 43px;border-radius:50%;overflow:hidden;background:#f9efdc;border:1px solid #efe3cc}.whale-mark img{display:block;width:100%;height:100%;object-fit:cover}
+
+.summary-grid{grid-template-columns:minmax(0,1.4fr) minmax(240px,1fr)}@media(max-width:720px){.summary-grid{grid-template-columns:1fr}.summary-grid .activity-card,.summary-grid .date-card{grid-column:auto;grid-row:auto}}
