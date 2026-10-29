@@ -91,8 +91,9 @@ export function createRuntime(config, { clock = () => Date.now(), onError = () =
       } catch { result.plans = { ok: false, error: 'Commitment persistence failed; do not resend' }; }
     }
     t.result = result;
-    if (t.proposal.lifeStories?.length) {
-      try { result.stories = life.recordStories(b.role, t.proposal.lifeStories, messages, id); }
+    const storyChanges=t.proposal.lifeStories===undefined?life.inferStories(b.role,messages,id):t.proposal.lifeStories;
+    if (storyChanges?.length) {
+      try { result.stories = life.recordStories(b.role, storyChanges, messages, id); }
       catch { result.stories = { ok: false, error: 'Story persistence failed; do not resend' }; }
     }
     return result;

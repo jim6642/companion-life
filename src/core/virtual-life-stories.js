@@ -72,7 +72,7 @@ export function applyLifeStories({ data, role, key, changes, now }) {
     data.stories[id] = { ...(old || { id, role, key, title: c.title, category: c.category, createdAt: now.at, startedDate: now.date }),
       status: c.action === 'complete' ? 'completed' : c.action === 'drop' ? 'dropped' : 'ongoing',
       revision: (old?.revision || 0) + 1, progress: c.progress,
-      nextStep: terminal(c.action === 'complete' ? 'completed' : c.action === 'drop' ? 'dropped' : 'ongoing') ? null : c.nextStep || old?.nextStep || null,
+      nextStep: terminal(c.action === 'complete' ? 'completed' : c.action === 'drop' ? 'dropped' : 'ongoing') ? null : c.nextStep ?? (c.action === 'advance' ? null : old?.nextStep || null),
       facts: { ...old?.facts, ...c.facts }, updatedDate: now.date, updatedAt: now.at,
       history: [...(old?.history || []), event].slice(-8) };
     ids.push(id);
@@ -96,5 +96,22 @@ export function storyContext({ data, role, key, topic = '', now }) {
   let used = 0;
   const text = selected.map(s => JSON.stringify(brief(s))).filter(line => { if (used + line.length > 1800) return false; used += line.length; return true; }).join('\n');
   const sharedRule = key === 'character' ? '这是同一角色各会话共享的公共生活进度，优先于各自旧聊天和旧时段中冲突的进度；不要因换群或转私聊重新开同一本书。只保存角色本身的公共生活，不写用户身份、私聊互动或私人约定。\n' : '';
-  return `【连续生活线】\n${sharedRule}未结束索引：${active.map(s => `${s.id} r${s.revision} ${s.title}`).join('；') || '无'}\n${text || '本轮无相关细节；可按标题补读。'}\n沿用已确认内容自然续聊，日期推进不代表进度自动发生；nextStep只是计划，离线期间不自动补剧情。无需每轮提起或每次新开故事。跨日可自然创作小进展，但只在实际说出后保存，不预先编好结局；真实作品情节不确定时不杜撰。\n`;
+  return `【连续生活线】\n${sharedRule}未结束索引：${active.map(s => `${s.id} r${s.revision} ${s.title}`).join('；') || '无'}\n${text || '本轮无相关细节；可按标题补读。'}\n沿用已确认内容自然续聊，日期推进不代表进度自动发生；nextStep只是计划，离线期间不自动补剧情。无需每轮提起或每次新开故事。已保存进度是带日期的历史位置，不要求今天重复这一段。距updatedDate超过一天且有继续阅读的活动时，自主决定一个合理的小进展、暂停或读完；不要每天重复同一剧情或感受。用户追问旧段落仍可回顾，但回顾不等于进度回退。谈及新进展时必须随发送附lifeStories（原id、expectedRevision、action、date、progress、evidence），让下一轮读到更新；不能只说“接着看”却不登记。跨日可自然创作小进展，但只在实际说出后保存，不预先编好结局；真实作品情节不确定时不杜撰。\n`;
+}
+
+// Conservative fallback for an existing reading line only. Never create stories,
+// infer an unseen chapter, or interpret reflection/plans as new reading progress.
+export function inferDeliveredReading({data,role,key,sentText,now}) {
+ const result=[];
+ for(const story of listLifeStories(data,role,key).filter(s=>s.category==='reading'&&!terminal(s.status))){
+  for(const message of sentText){
+   const sentences=String(message).split(/[。！？\n]/).map(s=>s.trim());
+   const evidence=sentences.find(s=>clean(s,100)&&s.includes(story.title)
+    && /我/.test(s)&&/(?:读到|翻到|看到|读完了|看完了)/.test(s)
+    && !/如果|假如|比如|假装|你说|他说|她说|昨天|以前|曾经|准备|打算|明天|下次|还没|没读|没看|又想到|又想起|回想|重读|重温|回顾|记得|想看|想读|也许|可能|未读|未看|没有读|没有看|并未/.test(s));
+   if(!evidence||evidence===story.progress)continue;
+   result.push({action:/读完了|看完了/.test(evidence)?'complete':'advance',date:now.date,id:story.id,expectedRevision:story.revision,subject:'character',basis:'own_virtual_experience',certainty:'settled',progress:evidence,evidence});break;
+  }
+ }
+ return result.slice(0,2);
 }
